@@ -1,23 +1,21 @@
--- I.S.-1 99 NIGHTS FARMER
--- РАБОТАЕТ: АВТОФАРМ, АВТОБОЙ, АВТОПРОКАЧКА
+-- I.S.-1 99 NIGHTS FARMER (ANDROID FIX)
+-- БЕЗ VIRTUALUSER, ТОЛЬКО CLICKDETECTOR
 
 local Players = game:GetService("Players")
 local LocalPlayer = Players.LocalPlayer
 local Workspace = game:GetService("Workspace")
 local RunService = game:GetService("RunService")
-local VirtualUser = game:GetService("VirtualUser")
-local UserInputService = game:GetService("UserInputService")
 
--- НАСТРОЙКИ (МЕНЯЙ ПОД СЕБЯ)
+-- НАСТРОЙКИ
 local settings = {
-    autoAttack = true,      -- АВТОАТАКА
-    autoCollect = true,     -- АВТОСБОР ДОБЫЧИ
-    autoUpgrade = true,     -- АВТОПРОКАЧКА
-    attackSpeed = 0.1,      -- СКОРОСТЬ АТАКИ
-    farmRange = 50          -- ДАЛЬНОСТЬ ПОИСКА
+    autoAttack = true,
+    autoCollect = true,
+    autoUpgrade = true,
+    attackSpeed = 0.2,
+    farmRange = 50
 }
 
--- СОЗДАЁМ ПРОСТОЙ UI
+-- СОЗДАЁМ UI
 local ScreenGui = Instance.new("ScreenGui")
 ScreenGui.Name = "NinetyNineFarmer"
 ScreenGui.Parent = game:GetService("CoreGui")
@@ -26,7 +24,6 @@ local MainFrame = Instance.new("Frame")
 MainFrame.Parent = ScreenGui
 MainFrame.BackgroundColor3 = Color3.fromRGB(0, 0, 0)
 MainFrame.BackgroundTransparency = 0.2
-MainFrame.BorderSizePixel = 0
 MainFrame.Position = UDim2.new(0, 20, 0, 20)
 MainFrame.Size = UDim2.new(0, 250, 0, 300)
 MainFrame.Active = true
@@ -65,21 +62,33 @@ local function getEnemies()
     return enemies
 end
 
--- АВТОАТАКА
+-- АВТОАТАКА (ЧЕРЕЗ CLICKDETECTOR)
 if settings.autoAttack then
-    RunService.Heartbeat:Connect(function()
-        if not LocalPlayer.Character then return end
-        local enemies = getEnemies()
-        if #enemies > 0 then
-            local target = enemies[1]
-            local hrp = target:FindFirstChild("HumanoidRootPart")
-            if hrp then
-                -- ПОВОРАЧИВАЕМСЯ К ВРАГУ
-                LocalPlayer.Character.HumanoidRootPart.CFrame = CFrame.new(LocalPlayer.Character.HumanoidRootPart.Position, hrp.Position)
-                -- ИМИТАЦИЯ КЛИКА (АТАКА)
-                VirtualUser:ClickButton1(Vector2.new(500, 500), game:GetService("CoreGui").RobloxGui.Camera)
-                wait(settings.attackSpeed)
+    spawn(function()
+        while true do
+            if LocalPlayer.Character then
+                local enemies = getEnemies()
+                if #enemies > 0 then
+                    local target = enemies[1]
+                    local hrp = target:FindFirstChild("HumanoidRootPart")
+                    if hrp then
+                        -- ПОВОРОТ К ВРАГУ
+                        LocalPlayer.Character.HumanoidRootPart.CFrame = CFrame.new(
+                            LocalPlayer.Character.HumanoidRootPart.Position,
+                            hrp.Position
+                        )
+                        -- ИЩЕМ КНОПКУ АТАКИ В UI
+                        for _, btn in pairs(game:GetService("CoreGui"):GetDescendants()) do
+                            if btn:IsA("TextButton") and (btn.Text:lower():find("attack") or btn.Text:lower():find("fight")) then
+                                btn:Click()
+                                break
+                            end
+                        end
+                        wait(settings.attackSpeed)
+                    end
+                end
             end
+            wait(0.1)
         end
     end)
 end
@@ -102,7 +111,7 @@ if settings.autoCollect then
     end)
 end
 
--- АВТОПРОКАЧКА (КЛИКАЕМ ПО КНОПКАМ UI)
+-- АВТОПРОКАЧКА
 if settings.autoUpgrade then
     spawn(function()
         while true do
@@ -125,6 +134,6 @@ game:GetService("StarterGui"):SetCore("SendNotification", {
 })
 
 print("========================================")
-print("I.S.-1 99 NIGHTS FARMER ЗАГРУЖЕН!")
+print("I.S.-1 99 NIGHTS FARMER (ANDROID) ЗАГРУЖЕН!")
 print("АВТОАТАКА, АВТОСБОР, АВТОПРОКАЧКА")
 print("========================================")
